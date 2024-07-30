@@ -87,7 +87,7 @@ def run(job):
 
         sim = Shear(
                 initial_state=init_gsd,
-                forces=forces,
+                forcefield=forces,
                 reference_values=refs,
                 shear_axis=job.sp.shear_axis,
                 shear_axis_normal=(1,0,0),
@@ -115,14 +115,14 @@ def run(job):
         steps_per_osc = job.sp.n_steps // job.sp.n_osc 
         steps_per_shear_sim = steps_per_osc // 4
         print("Running simulation.")
-        for i in range(n_osc):
+        for i in range(job.sp.n_osc):
                 # Positive shear
                 sim.run_shear(
                         n_steps=steps_per_shear_sim,
                         shear_length=job.sp.shear_length,
                         kT=job.sp.kT,
                         tau_kT=job.doc.tau_kT,
-                        period=job.sp.period,
+                        period=int(job.sp.period),
                         ensemble=job.sp.ensemble
                 )
                 # Negative
@@ -131,7 +131,7 @@ def run(job):
                         shear_length=-job.sp.shear_length,
                         kT=job.sp.kT,
                         tau_kT=job.doc.tau_kT,
-                        period=job.sp.period,
+                        period=int(job.sp.period),
                         ensemble=job.sp.ensemble
                 )
                 # Negative 
@@ -140,7 +140,7 @@ def run(job):
                         shear_length=-job.sp.shear_length,
                         kT=job.sp.kT,
                         tau_kT=job.doc.tau_kT,
-                        period=job.sp.period,
+                        period=int(job.sp.period),
                         ensemble=job.sp.ensemble
                 )
                 # Positive
@@ -149,7 +149,7 @@ def run(job):
                         shear_length=job.sp.shear_length,
                         kT=job.sp.kT,
                         tau_kT=job.doc.tau_kT,
-                        period=job.sp.period,
+                        period=int(job.sp.period),
                         ensemble=job.sp.ensemble
                 )
         # Save a restart GSD for resuming and running longer

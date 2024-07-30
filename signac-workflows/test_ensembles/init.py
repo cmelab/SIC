@@ -23,15 +23,17 @@ def get_parameters():
     parameters = OrderedDict()
     # Define some simulation related parameters:
     parameters["ensemble"] = ["NVT", "NVE"]
-    parameters["kT"] = [3.0]
-    parameters["n_steps"] = [1e7]
-    parameters["n_osc"] = [1000]
-    parameters["period"] = [1e4]
-    parameters["shear_length"] = [2.0] # TODO Figure out interface size
+    parameters["kT"] = [1.8, 2.8]
+    parameters["tau_kT"] = [100]
+    parameters["n_steps"] = [1e6]
+    parameters["n_osc"] = [100]
+    parameters["period"] = [1e2]
+    parameters["shear_length"] = [2.5] 
+    parameters["shear_axis"] = [[(0,1,0)]]
     parameters["fix_particle_ratio"] = [0.05]
     parameters["gsd_write_freq"] = [1e4]
     parameters["log_write_freq"] = [1e3]
-    parameters["interfac_file"] = ["interface.gsd"]
+    parameters["interface_file"] = ["interface.gsd"]
     parameters["forces_file"] = ["forcefield.pickle"]
     return list(parameters.keys()), list(product(*parameters.values()))
 
@@ -44,7 +46,7 @@ def main():
         statepoint = dict(zip(param_names, params))
         job = project.open_job(statepoint)
         job.init()
-        job.doc.setdefault("nvt_done", False)
+        job.doc.setdefault("done", False)
         job.doc.setdefault("sample_done", False)
 
 
