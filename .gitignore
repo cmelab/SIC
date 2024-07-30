@@ -6,3 +6,8 @@
 *.csv
 *.gsd
 *.pickle
+
+*workspace*
+*.signac
+signac_project_document.json
+*.out*
