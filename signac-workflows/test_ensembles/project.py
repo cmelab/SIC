@@ -40,10 +40,15 @@ class Fry(DefaultSlurmEnvironment):
             help="Specify the partition to submit to."
         )
 
-# Definition of project-related labels (classification)
+
 @MyProject.label
-def done(job):
-    return job.doc.done
+def shear_done(job):
+    return job.doc.shear_done
+
+
+@MyProject.label
+def tensile_done(job):
+    return job.doc.tensile_done
 
 
 @MyProject.label
@@ -51,11 +56,118 @@ def sample_done(job):
     return job.doc.sample_done
 
 
-@MyProject.post(done)
+@MyProject.post(tensile_done)
 @MyProject.operation(
-        directives={"ngpu": 1, "executable": "python -u"}, name="run"
+        directives={"ngpu": 1, "executable": "python -u"}, name="run-tensile"
 )
-def run(job):
+def run_tensile(job):
+    import os
+    import pickle
+
+    import hoomd
+    import unyt as u
+
+    import flowermd
+    from flowermd.library import Tensile 
+
+    with job:
+        print("JOB ID NUMBER:")
+        print(job.id)
+        print("------------------------------------")
+    
+        gsd_path = job.fn("tensile.gsd")
+        log_path = job.fn("log-tensile.txt")
+        init_gsd = os.path.join(job.project.path, job.sp.interface_file)
+        ff_file = os.path.join(job.project.path, job.sp.forces_file)
+        with open(ff_file, "rb") as f:
+            forces = pickle.load(f)
+            for force in forces:
+                if isinstance(force, hoomd.md.external.wall.LJ):
+                    forces.remove(force)
+        refs = {
+                "length": 0.3438 * u.Unit("nm"),
+                "mass": 32.06 * u.Unit("amu"),
+                "energy": 1.7782 * u.Unit("kJ/mol")
+        }
+
+        sim = Tensile(
+                initial_state=init_gsd,
+                forcefield=forces,
+                reference_values=refs,
+                tensile_axis=(1,0,0),
+                fix_ratio=job.sp.fix_particle_ratio,
+                gsd_write_freq=job.sp.gsd_write_freq,
+                gsd_file_name=gsd_path,
+                log_write_freq=job.sp.log_write_freq,
+                log_file_name=log_path,
+        )
+        # Save initial config and forces for each job
+        sim.pickle_forcefield(job.fn("forcefield.pickle"))
+        sim.save_restart_gsd(job.fn("init.gsd"))
+        # Store unit information in job doc
+        tau_kT = sim.dt * job.sp.tau_kT
+        job.doc.tau_kT = tau_kT
+        job.doc.ref_mass = sim.reference_mass.to("amu").value
+        job.doc.ref_mass_units = "amu"
+        job.doc.ref_energy = sim.reference_energy.to("kJ/mol").value
+        job.doc.ref_energy_units = "kJ/mol"
+        job.doc.ref_length = sim.reference_length.to("nm").value
+        job.doc.ref_length_units = "nm"
+        job.doc.real_time_step = sim.real_timestep.to("fs").value
+        job.doc.real_time_units = "fs"
+        # Set up frequency and steps
+        steps_per_osc = job.sp.n_steps // job.sp.n_osc 
+        steps_per_tensile_sim = steps_per_osc // 4
+        job.doc.steps_per_tensile_sim = steps_per_tensile_sim
+        print("Running simulation.")
+        for i in range(job.sp.n_osc):
+                # Positive
+                sim.run_tensile(
+                        n_steps=steps_per_tensile_sim,
+                        tensile_length=job.sp.displacement,
+                        kT=job.sp.kT,
+                        tau_kT=job.doc.tau_kT,
+                        period=int(job.sp.period),
+                        ensemble=job.sp.ensemble
+                )
+                # Negative, run twice as long
+                sim.run_tensile(
+                        n_steps=int(2 * steps_per_tensile_sim),
+                        tensile_length=2 * -job.sp.displacement,
+                        kT=job.sp.kT,
+                        tau_kT=job.doc.tau_kT,
+                        period=int(job.sp.period),
+                        ensemble=job.sp.ensemble
+                )
+                # Negative 
+                #sim.run_tensile(
+                #        n_steps=steps_per_tensile_sim,
+                #        tensile_length=-job.sp.displacement,
+                #        kT=job.sp.kT,
+                #        tau_kT=job.doc.tau_kT,
+                #        period=int(job.sp.period),
+                #        ensemble=job.sp.ensemble
+                #)
+                # Positive
+                sim.run_tensile(
+                        n_steps=steps_per_tensile_sim,
+                        tensile_length=job.sp.displacement,
+                        kT=job.sp.kT,
+                        tau_kT=job.doc.tau_kT,
+                        period=int(job.sp.period),
+                        ensemble=job.sp.ensemble
+                )
+        # Save a restart GSD for resuming and running longer
+        sim.save_restart_gsd(job.fn("tensile-restart.gsd"))
+        job.doc.tensile_done = True
+        print("Simulation finished.")
+
+
+@MyProject.post(shear_done)
+@MyProject.operation(
+        directives={"ngpu": 1, "executable": "python -u"}, name="run-shear"
+)
+def run_shear(job):
     import os
     import pickle
 
@@ -70,8 +182,8 @@ def run(job):
         print(job.id)
         print("------------------------------------")
     
-        gsd_path = job.fn("trajectory.gsd")
-        log_path = job.fn("log.txt")
+        gsd_path = job.fn("shear.gsd")
+        log_path = job.fn("log-shear.txt")
         init_gsd = os.path.join(job.project.path, job.sp.interface_file)
         ff_file = os.path.join(job.project.path, job.sp.forces_file)
         with open(ff_file, "rb") as f:
@@ -116,7 +228,7 @@ def run(job):
         steps_per_shear_sim = steps_per_osc // 4
         print("Running simulation.")
         for i in range(job.sp.n_osc):
-                # Positive shear
+                # Positive
                 sim.run_shear(
                         n_steps=steps_per_shear_sim,
                         shear_length=job.sp.shear_length,
@@ -125,24 +237,24 @@ def run(job):
                         period=int(job.sp.period),
                         ensemble=job.sp.ensemble
                 )
-                # Negative
+                # Negative, run twice as long
                 sim.run_shear(
-                        n_steps=steps_per_shear_sim,
-                        shear_length=-job.sp.shear_length,
+                        n_steps=int(2 * steps_per_shear_sim),
+                        shear_length=2 * -job.sp.shear_length,
                         kT=job.sp.kT,
                         tau_kT=job.doc.tau_kT,
                         period=int(job.sp.period),
                         ensemble=job.sp.ensemble
                 )
                 # Negative 
-                sim.run_shear(
-                        n_steps=steps_per_shear_sim,
-                        shear_length=-job.sp.shear_length,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
+                #sim.run_shear(
+                #        n_steps=steps_per_shear_sim,
+                #        shear_length=-job.sp.shear_length,
+                #        kT=job.sp.kT,
+                #        tau_kT=job.doc.tau_kT,
+                #        period=int(job.sp.period),
+                #        ensemble=job.sp.ensemble
+                #)
                 # Positive
                 sim.run_shear(
                         n_steps=steps_per_shear_sim,
@@ -153,12 +265,12 @@ def run(job):
                         ensemble=job.sp.ensemble
                 )
         # Save a restart GSD for resuming and running longer
-        sim.save_restart_gsd(job.fn("restart.gsd"))
-        job.doc.done = True
+        sim.save_restart_gsd(job.fn("shear_restart.gsd"))
+        job.doc.shear_done = True
         print("Simulation finished.")
 
 
-@MyProject.pre(done)
+@MyProject.pre(shear_done)
 @MyProject.post(sample_done)
 @MyProject.operation(
         directives={"ngpu": 0, "executable": "python -u"}, name="sample"
