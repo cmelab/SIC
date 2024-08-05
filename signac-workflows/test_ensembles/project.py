@@ -121,42 +121,44 @@ def run_tensile(job):
         job.doc.steps_per_tensile_sim = steps_per_tensile_sim
         print("Running simulation.")
         for i in range(job.sp.n_osc):
-                # Positive
-                sim.run_tensile(
-                        n_steps=steps_per_tensile_sim,
-                        tensile_length=job.sp.displacement,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
-                # Negative, run twice as long
-                sim.run_tensile(
-                        n_steps=int(2 * steps_per_tensile_sim),
-                        tensile_length=2 * -job.sp.displacement,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
-                # Negative 
-                #sim.run_tensile(
-                #        n_steps=steps_per_tensile_sim,
-                #        tensile_length=-job.sp.displacement,
-                #        kT=job.sp.kT,
-                #        tau_kT=job.doc.tau_kT,
-                #        period=int(job.sp.period),
-                #        ensemble=job.sp.ensemble
-                #)
-                # Positive
-                sim.run_tensile(
-                        n_steps=steps_per_tensile_sim,
-                        tensile_length=job.sp.displacement,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
+            print("========================")
+            print(f"Running Oscillation {i}")
+            # Positive
+            sim.run_tensile(
+                    n_steps=steps_per_tensile_sim,
+                    tensile_length=job.sp.displacement,
+                    kT=job.sp.kT,
+                    tau_kT=job.doc.tau_kT,
+                    period=int(job.sp.period),
+                    ensemble=job.sp.ensemble
+            )
+            # Negative, run twice as long
+            sim.run_tensile(
+                    n_steps=int(2 * steps_per_tensile_sim),
+                    tensile_length=2 * -job.sp.displacement,
+                    kT=job.sp.kT,
+                    tau_kT=job.doc.tau_kT,
+                    period=int(job.sp.period),
+                    ensemble=job.sp.ensemble
+            )
+            # Negative 
+            #sim.run_tensile(
+            #        n_steps=steps_per_tensile_sim,
+            #        tensile_length=-job.sp.displacement,
+            #        kT=job.sp.kT,
+            #        tau_kT=job.doc.tau_kT,
+            #        period=int(job.sp.period),
+            #        ensemble=job.sp.ensemble
+            #)
+            # Positive
+            sim.run_tensile(
+                    n_steps=steps_per_tensile_sim,
+                    tensile_length=job.sp.displacement,
+                    kT=job.sp.kT,
+                    tau_kT=job.doc.tau_kT,
+                    period=int(job.sp.period),
+                    ensemble=job.sp.ensemble
+            )
         # Save a restart GSD for resuming and running longer
         sim.save_restart_gsd(job.fn("tensile-restart.gsd"))
         job.doc.tensile_done = True
@@ -228,42 +230,44 @@ def run_shear(job):
         steps_per_shear_sim = steps_per_osc // 4
         print("Running simulation.")
         for i in range(job.sp.n_osc):
-                # Positive
-                sim.run_shear(
-                        n_steps=steps_per_shear_sim,
-                        shear_length=job.sp.shear_length,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
-                # Negative, run twice as long
-                sim.run_shear(
-                        n_steps=int(2 * steps_per_shear_sim),
-                        shear_length=2 * -job.sp.shear_length,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
-                # Negative 
-                #sim.run_shear(
-                #        n_steps=steps_per_shear_sim,
-                #        shear_length=-job.sp.shear_length,
-                #        kT=job.sp.kT,
-                #        tau_kT=job.doc.tau_kT,
-                #        period=int(job.sp.period),
-                #        ensemble=job.sp.ensemble
-                #)
-                # Positive
-                sim.run_shear(
-                        n_steps=steps_per_shear_sim,
-                        shear_length=job.sp.shear_length,
-                        kT=job.sp.kT,
-                        tau_kT=job.doc.tau_kT,
-                        period=int(job.sp.period),
-                        ensemble=job.sp.ensemble
-                )
+            print("========================")
+            print(f"Running Oscillation {i}")
+            # Positive
+            sim.run_shear(
+                    n_steps=steps_per_shear_sim,
+                    shear_length=job.sp.displacement,
+                    kT=job.sp.kT,
+                    tau_kT=job.doc.tau_kT,
+                    period=int(job.sp.period),
+                    ensemble=job.sp.ensemble
+            )
+            # Negative, run twice as long
+            sim.run_shear(
+                    n_steps=int(2 * steps_per_shear_sim),
+                    shear_length=2 * -job.sp.displacement,
+                    kT=job.sp.kT,
+                    tau_kT=job.doc.tau_kT,
+                    period=int(job.sp.period),
+                    ensemble=job.sp.ensemble
+            )
+            # Negative 
+            #sim.run_shear(
+            #        n_steps=steps_per_shear_sim,
+            #        shear_length=-job.sp.shear_length,
+            #        kT=job.sp.kT,
+            #        tau_kT=job.doc.tau_kT,
+            #        period=int(job.sp.period),
+            #        ensemble=job.sp.ensemble
+            #)
+            # Positive
+            sim.run_shear(
+                    n_steps=steps_per_shear_sim,
+                    shear_length=job.sp.displacement,
+                    kT=job.sp.kT,
+                    tau_kT=job.doc.tau_kT,
+                    period=int(job.sp.period),
+                    ensemble=job.sp.ensemble
+            )
         # Save a restart GSD for resuming and running longer
         sim.save_restart_gsd(job.fn("shear_restart.gsd"))
         job.doc.shear_done = True

@@ -22,16 +22,28 @@ def get_parameters():
     ''''''
     parameters = OrderedDict()
     # Define some simulation related parameters:
-    parameters["ensemble"] = ["NVT", "NVE"]
+    parameters["ensemble"] = [
+        "NVT",
+        #"NVE"
+    ]
     parameters["kT"] = [2.8]
     parameters["tau_kT"] = [100]
-    parameters["n_steps"] = [1e6]
+    parameters["n_steps"] = [1e7]
     parameters["n_osc"] = [100]
-    parameters["period"] = [1e2]
-    parameters["displacement"] = [2.5, 1.5, 3.5]
+    parameters["period"] = [1e3]
+    parameters["dt"] = [0.0002]
+    parameters["displacement"] = [
+        2.0,
+        4.0,
+        5.0,
+        8.0,
+        10.0,
+        12,
+
+    ]
     parameters["shear_axis"] = [[(0,1,0)]]
-    parameters["fix_particle_ratio"] = [0.05]
-    parameters["gsd_write_freq"] = [1e3]
+    parameters["fix_particle_ratio"] = [0.10]
+    parameters["gsd_write_freq"] = [5e4]
     parameters["log_write_freq"] = [1e3]
     parameters["interface_file"] = ["interface.gsd"]
     parameters["forces_file"] = ["forcefield.pickle"]
