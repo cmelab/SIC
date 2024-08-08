@@ -28,11 +28,13 @@ def get_parameters():
     ]
     parameters["kT"] = [4.0]
     parameters["tau_kT"] = [100]
-    parameters["n_steps"] = [5e6]
-    parameters["n_osc"] = [10]
-    parameters["period"] = [1000]
+    parameters["n_steps"] = [1e6]
+    parameters["n_osc"] = [5]
+    parameters["period"] = [500]
     parameters["dt"] = [0.0001]
     parameters["displacement"] = [
+        #2.0,
+        #3.0,
         4.0,
         #5.0,
         #6.0,
