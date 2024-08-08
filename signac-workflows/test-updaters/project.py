@@ -74,7 +74,7 @@ def run_tensile(job):
     import unyt as u
 
     import flowermd
-    from flowermd.library import Tensile 
+    from flowermd.library import OscillatingTensile 
 
     with job:
         print("JOB ID NUMBER:")
@@ -94,10 +94,10 @@ def run_tensile(job):
         refs = {
                 "length": 0.3438 * u.Unit("nm"),
                 "mass": 32.06 * u.Unit("amu"),
-                "energy": 1.7782 * u.Unit("kJ/mol")
+                "energy": 1.065 * u.Unit("kJ/mol")
         }
 
-        sim = Tensile(
+        sim = OscillatingTensile(
                 initial_state=init_gsd,
                 forcefield=forces,
                 reference_values=refs,
@@ -128,27 +128,36 @@ def run_tensile(job):
         steps_per_tensile_sim = steps_per_osc // 4
         job.doc.steps_per_tensile_sim = steps_per_tensile_sim
         print("Running simulation.")
-        for i in range(job.sp.n_osc):
-            print("========================")
-            print(f"Running Oscillation {i}")
-            # Positive
-            sim.run_tensile(
-                    n_steps=steps_per_tensile_sim,
-                    tensile_length=job.sp.displacement,
-                    kT=job.sp.kT,
-                    tau_kT=job.doc.tau_kT,
-                    period=int(job.sp.period),
-                    ensemble=job.sp.ensemble
-            )
-            # Negative, run twice as long
-            sim.run_tensile(
-                    n_steps=int(2 * steps_per_tensile_sim),
-                    tensile_length=2 * -job.sp.displacement,
-                    kT=job.sp.kT,
-                    tau_kT=job.doc.tau_kT,
-                    period=int(job.sp.period),
-                    ensemble=job.sp.ensemble
-            )
+        sim.run_tensile(
+                n_steps=job.sp.n_steps,
+                n_oscillations=job.sp.n_osc,
+                period=job.sp.period,
+                kT=job.sp.kT,
+                tau_kT=job.doc.tau_kT,
+                tensile_length=job.sp.displacement,
+                ensemble=job.sp.ensemble
+        )
+        #for i in range(job.sp.n_osc):
+        #    print("========================")
+        #    print(f"Running Oscillation {i}")
+        #    # Positive
+        #    sim.run_tensile(
+        #            n_steps=steps_per_tensile_sim,
+        #            tensile_length=job.sp.displacement,
+        #            kT=job.sp.kT,
+        #            tau_kT=job.doc.tau_kT,
+        #            period=int(job.sp.period),
+        #            ensemble=job.sp.ensemble
+        #    )
+        #    # Negative, run twice as long
+        #    sim.run_tensile(
+        #            n_steps=int(2 * steps_per_tensile_sim),
+        #            tensile_length=2 * -job.sp.displacement,
+        #            kT=job.sp.kT,
+        #            tau_kT=job.doc.tau_kT,
+        #            period=int(job.sp.period),
+        #            ensemble=job.sp.ensemble
+        #    )
             # Negative 
             #sim.run_tensile(
             #        n_steps=steps_per_tensile_sim,
@@ -159,14 +168,14 @@ def run_tensile(job):
             #        ensemble=job.sp.ensemble
             #)
             # Positive
-            sim.run_tensile(
-                    n_steps=steps_per_tensile_sim,
-                    tensile_length=job.sp.displacement,
-                    kT=job.sp.kT,
-                    tau_kT=job.doc.tau_kT,
-                    period=int(job.sp.period),
-                    ensemble=job.sp.ensemble
-            )
+        #    sim.run_tensile(
+        #            n_steps=steps_per_tensile_sim,
+        #            tensile_length=job.sp.displacement,
+        #            kT=job.sp.kT,
+        #            tau_kT=job.doc.tau_kT,
+        #            period=int(job.sp.period),
+        #            ensemble=job.sp.ensemble
+        #    )
         # Save a restart GSD for resuming and running longer
         sim.save_restart_gsd(job.fn("tensile-restart.gsd"))
         job.doc.tensile_done = True

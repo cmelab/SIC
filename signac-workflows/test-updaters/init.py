@@ -26,24 +26,26 @@ def get_parameters():
         "NVT",
         #"NVE"
     ]
-    parameters["kT"] = [2.8]
+    parameters["kT"] = [4.0]
     parameters["tau_kT"] = [100]
-    parameters["n_steps"] = [2e8]
-    parameters["n_osc"] = [1000]
+    parameters["n_steps"] = [5e6]
+    parameters["n_osc"] = [10]
     parameters["period"] = [1000]
-    parameters["dt"] = [0.0002]
+    parameters["dt"] = [0.0001]
     parameters["displacement"] = [
         4.0,
-        5.0,
-        6.0,
-        7.0,
-        8.0,
-        9.0,
-        10.0,
+        #5.0,
+        #6.0,
+        #7.0,
+        #8.0,
+        #9.0,
+        #10.0,
+        #12.0,
+        #14.0,
     ]
     parameters["shear_axis"] = [[(0,1,0)]]
-    parameters["fix_particle_ratio"] = [0.09]
-    parameters["gsd_write_freq"] = [1e5]
+    parameters["fix_particle_ratio"] = [0.05]
+    parameters["gsd_write_freq"] = [5e3]
     parameters["log_write_freq"] = [1e3]
     parameters["interface_file"] = ["interface.gsd"]
     parameters["forces_file"] = ["forcefield.pickle"]
