@@ -3,7 +3,6 @@ import hoomd
 import gsd
 import numpy as np
 import freud
-import time
 
 
 def nematic_order(gsd_file):
@@ -37,5 +36,4 @@ def nematic_order(gsd_file):
         nematic.compute(vectors)
         # Appending the order of the frame for plotting purposes
         s2_orders.append(nematic.order)
-    print("Time taken:", time.process_time() - start, "s")
     return(s2_orders)
