@@ -24,16 +24,16 @@ def nematic_order(gsd_file, start=0, stop=None, stride=1):
     """
     nm_orders = []
     directors = []
-    with gsd.hoomd.open(gsd_file) as traj: #opening gsd file as traj
-        for snap in traj[start:stop:stride]: #looping through each frame
+    with gsd.hoomd.open(gsd_file) as traj: # Opening gsd file as traj
+        for snap in traj[start:stop:stride]: # Looping through each frame
             bond_vectors = []
             nematic = freud.order.Nematic()
-            for bond in snap.bonds.group: #looping through each bond in frame
+            for bond in snap.bonds.group: # Looping through each bond in frame
                 pos2 = snap.particles.position[bond[1]]
                 pos1 = snap.particles.position[bond[0]]
                 vec = pos2 - pos1
                 bond_vectors.append(vec)
-            nematic.compute(np.array(bond_vectors))#computing nematic order for each frame
+            nematic.compute(np.array(bond_vectors))# Computing nematic order for each frame
             nm_orders.append(nematic.order)
             directors.append(nematic.director)
     
