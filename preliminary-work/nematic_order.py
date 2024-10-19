@@ -6,6 +6,7 @@ import freud
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
+import time
 
 
 def nematic_order(gsd_file, start=0, stop=None, stride=1):
@@ -60,22 +61,19 @@ def graph_bonds(gsd_file, start=0, stop=None, stride=1):
     stride : int, default 1
         The step size to use when iterating through start:stop
     """
-    frames = [[]]
+    frames = []
     with gsd.hoomd.open(gsd_file) as traj: # Opening gsd file as traj
         for snap in traj[start:stop:stride]: # Looping through each frame
-            frame = []
-            vectors = []
-            positions = []
-            nematic = freud.order.Nematic()
-            for bond in snap.bonds.group: # Looping through each bond in frame
-                pos2 = snap.particles.position[bond[1]]
-                pos1 = snap.particles.position[bond[0]]
-                vec = pos2 - pos1
-                vectors.append(vec)
-                positions.append(pos1)
-                frame.append([[pos1,vec]]) # Appending the positions and vectors of each bond to the frame
-            frames.append(frame) # Appending this frame to a list of frames
-    return(frames)
+            bonds = snap.bonds.group
+            pos = snap.particles.position
+            positions = np.zeros((len(snap.bonds.group), 3))  # Assigning array size depending on bond size
+            vecs = np.zeros((len(snap.bonds.group), 3))
+            for i, bond in enumerate(bonds): # Looping through each bond in frame
+                positions[i] = pos[bond[0]]  # Assign position directly to avoid appending to a list
+                vecs[i] = pos[bond[1]] - pos[bond[0]]
+            frame = np.column_stack((positions, vecs)) # Stacking positions and vectors into an array for one frame
+            frames.append(frame) # Appending each frame to a list of frames
+    return frames
 
 def color_map(gsd_file, frame_num=0):
     """
@@ -88,32 +86,23 @@ def color_map(gsd_file, frame_num=0):
     frame_num : int, default 0
         The frame of a gsd trajectory that you want to access.
     """
-    orders,directors = nematic_order(gsd_file) # Obtaining director vectors to compare against
+    orders, directors = nematic_order(gsd_file)
     frames = graph_bonds(gsd_file)
-    vectors = []
-    positions = []
     frame = frames[frame_num]
     director = directors[frame_num]
-    for i in range(len(frame)): # Getting the position and vectors of each bond in the specified frame
-        vectors.append(frame[i][0][1])
-        positions.append(frame[i][0][0])
+    positions = frame[:, 0:3]
+    vectors = frame[:, 3:]
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     misalignments = []
     for i in range(len(frame)): # Calculating the difference between the bond vector and the nematic director for the frame
         misalignment = np.arccos(np.clip(np.dot(vectors[i], director) / (np.linalg.norm(vectors[i]) * np.linalg.norm(director)), -1.0, 1.0))
         misalignments.append(misalignment)
-    if len(misalignments) != 0:
+    if len(misalignments) != 0: # Checking to see if there are any misalignments as perfectly crystalline systems won't have misalignments
         norm_misalignments = (np.array(misalignments) - np.min(misalignments)) / (np.max(misalignments) - np.min(misalignments)) # Normalizing
         colors = cm.magma(norm_misalignments) # Setting the colormap
-        for i in range(len(frame)): # Plotting
-            ax.quiver(positions[i][0],
-                      positions[i][1],
-                      positions[i][2],
-                      vectors[i][0],
-                      vectors[i][1],
-                      vectors[i][2],
-                      color=colors[i], length=1)
+        for i in range(len(frame)):
+            ax.quiver(*positions[i], *vectors[i], color=colors[i], length=1) # Unpacking and plotting positions and vectors for each bond
     else:
         print("All of the bonds in this frame are aligned with the nematic director. The nematic order is 1.")
     
