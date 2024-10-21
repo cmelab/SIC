@@ -42,7 +42,7 @@ def nematic_order(gsd_file, start=0, stop=None, stride=1):
             directors.append(nematic.director)
     return(nm_orders,directors)
 
-def graph_bonds(gsd_file, start=0, stop=None, stride=1):
+def get_frames(gsd_file, start=0, stop=None, stride=1):
     """
     Returns the orientations and positions of bonds for a GSD coarse-grained system.
     
@@ -75,32 +75,36 @@ def graph_bonds(gsd_file, start=0, stop=None, stride=1):
             frames.append(frame) # Appending each frame to a list of frames
     return frames
 
-def color_map(gsd_file, frame_num=0):
+def color_map(directors, frames, frame_num=0):
     """
     Colors the orientations of bond vectors for a GSD coarse-grained system depending on alignment with nematic director.
     
     Parameters
     ----------
-    gsdfile : str
-        Filename for gsd file
+    directors : list
+        A list of director vectors as returned by the nematic_order function.
+    frames : list
+        A list of frames as returned by the get_frames function.
     frame_num : int, default 0
-        The frame of a gsd trajectory that you want to access.
+        The frame of the list of frames that you want to access.
     """
-    orders, directors = nematic_order(gsd_file)
-    frames = graph_bonds(gsd_file)
     frame = frames[frame_num]
     director = directors[frame_num]
     positions = frame[:, 0:3]
     vectors = frame[:, 3:]
+    temp_vecs = np.copy(vectors)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     misalignments = []
     for i in range(len(frame)): # Calculating the difference between the bond vector and the nematic director for the frame
-        misalignment = np.arccos(np.clip(np.dot(vectors[i], director) / (np.linalg.norm(vectors[i]) * np.linalg.norm(director)), -1.0, 1.0))
+        if np.dot(vectors[i], director) < 0:
+            temp_vecs[i] = -vectors[i]
+        misalignment = (np.arccos(np.clip(np.dot(temp_vecs[i], director) /
+        (np.linalg.norm(temp_vecs[i]) * np.linalg.norm(director)), -1.0, 1.0)))
         misalignments.append(misalignment)
     if len(misalignments) != 0: # Checking to see if there are any misalignments as perfectly crystalline systems won't have misalignments
         norm_misalignments = (np.array(misalignments) - np.min(misalignments)) / (np.max(misalignments) - np.min(misalignments)) # Normalizing
-        colors = cm.magma(norm_misalignments) # Setting the colormap
+        colors = cm.magma_r(norm_misalignments) # Setting the colormap
         for i in range(len(frame)):
             ax.quiver(*positions[i], *vectors[i], color=colors[i], length=1) # Unpacking and plotting positions and vectors for each bond
     else:
